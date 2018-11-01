@@ -3,8 +3,8 @@
 #include "hash/extendible_hash.h"
 #include "page/page.h"
 
-namespace cmudb {
-
+namespace cmudb
+{
   /*
 * constructor
 * array_size: fixed array size for each bucket
@@ -16,7 +16,8 @@ namespace cmudb {
 * helper function to calculate the hashing address of input key
 */
   template <typename K, typename V>
-  size_t ExtendibleHash<K, V>::HashKey(const K &key) {
+  size_t ExtendibleHash<K, V>::HashKey(const K &key)
+  {
     return 0;
   }
 
@@ -25,7 +26,8 @@ namespace cmudb {
 * NOTE: you must implement this function in order to pass test
 */
   template <typename K, typename V>
-  int ExtendibleHash<K, V>::GetGlobalDepth() const {
+  int ExtendibleHash<K, V>::GetGlobalDepth() const
+  {
     return 0;
   }
 
@@ -34,7 +36,8 @@ namespace cmudb {
 * NOTE: you must implement this function in order to pass test
 */
   template <typename K, typename V>
-  int ExtendibleHash<K, V>::GetLocalDepth(int bucket_id) const {
+  int ExtendibleHash<K, V>::GetLocalDepth(int bucket_id) const
+  {
     return 0;
   }
 
@@ -42,7 +45,8 @@ namespace cmudb {
 * helper function to return current number of bucket in hash table
 */
   template <typename K, typename V>
-  int ExtendibleHash<K, V>::GetNumBuckets() const {
+  int ExtendibleHash<K, V>::GetNumBuckets() const
+  {
     return 0;
   }
 
@@ -50,7 +54,8 @@ namespace cmudb {
 * lookup function to find value associate with input key
 */
   template <typename K, typename V>
-  bool ExtendibleHash<K, V>::Find(const K &key, V &value) {
+  bool ExtendibleHash<K, V>::Find(const K &key, V &value)
+  {
     return false;
   }
 
@@ -59,7 +64,8 @@ namespace cmudb {
 * Shrink & Combination is not required for this project
 */
   template <typename K, typename V>
-  bool ExtendibleHash<K, V>::Remove(const K &key) {
+  bool ExtendibleHash<K, V>::Remove(const K &key)
+  {
     return false;
   }
 
