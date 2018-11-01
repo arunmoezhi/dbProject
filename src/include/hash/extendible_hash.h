@@ -17,6 +17,34 @@
 
 namespace cmudb
 {
+  template <typename K, typename V> class ExtendibleHash;
+
+  template <typename K, typename V>
+  class Pair
+  {
+    friend class ExtendibleHash<K, V>;
+    public:
+      // constructor
+      Pair(K key, V val);
+
+    private:
+    K m_key;
+    V m_val;
+  };
+
+  template <typename K, typename V>
+  class Buffer
+  {
+    friend class ExtendibleHash<K, V>;
+    public:
+      // constructor
+      Buffer(size_t size);
+
+    private:
+    size_t m_size;
+    Pair<K, V>** m_data;
+  };
+
   template <typename K, typename V>
   class ExtendibleHash : public HashTable<K, V>
   {
@@ -25,6 +53,7 @@ namespace cmudb
       ExtendibleHash(size_t size);
       // helper function to generate hash addressing
       size_t HashKey(const K &key);
+      size_t GetBucketId(const K& key);
       // helper function to get global & local depth
       int GetGlobalDepth() const;
       int GetLocalDepth(int bucket_id) const;
@@ -35,6 +64,6 @@ namespace cmudb
       void Insert(const K &key, const V &value) override;
 
     private:
-      // add your own member variables here
+      std::vector<Buffer<K, V>*> m_directory;
   };
 } // namespace cmudb

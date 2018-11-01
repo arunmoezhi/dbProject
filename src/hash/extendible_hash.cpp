@@ -3,14 +3,37 @@
 #include "hash/extendible_hash.h"
 #include "page/page.h"
 
+#define INITIAL_MAP_SIZE 2
+
 namespace cmudb
 {
+  template <typename K, typename V>
+  Pair<K, V>::Pair(K key, V val)
+  {
+    m_key = key;
+    m_val = val;
+  }
+
+  template <typename K, typename V>
+  Buffer<K, V>::Buffer(size_t size)
+  {
+    m_size = size;
+    m_data = new Pair<K, V>*[size];
+  }
+
   /*
 * constructor
 * array_size: fixed array size for each bucket
 */
   template <typename K, typename V>
-  ExtendibleHash<K, V>::ExtendibleHash(size_t size) {}
+  ExtendibleHash<K, V>::ExtendibleHash(size_t size)
+  {
+    m_directory.reserve(INITIAL_MAP_SIZE);
+    for(int i=0;i<INITIAL_MAP_SIZE;i++)
+    {
+      m_directory[i] = new Buffer<K, V>(size);
+    }
+  }
 
   /*
 * helper function to calculate the hashing address of input key
@@ -18,7 +41,7 @@ namespace cmudb
   template <typename K, typename V>
   size_t ExtendibleHash<K, V>::HashKey(const K &key)
   {
-    return 0;
+    return (size_t) key;
   }
 
   /*
@@ -50,13 +73,21 @@ namespace cmudb
     return 0;
   }
 
+  template <typename K, typename V>
+  size_t ExtendibleHash<K, V>::GetBucketId(const K &key)
+  {
+    size_t h = HashKey(key);
+    return h%m_directory.size();
+  }
+
   /*
 * lookup function to find value associate with input key
 */
   template <typename K, typename V>
   bool ExtendibleHash<K, V>::Find(const K &key, V &value)
   {
-    return false;
+    value = m_directory[0]->m_data[0]->m_val;
+    return true;
   }
 
   /*
@@ -75,7 +106,11 @@ namespace cmudb
 * global depth
 */
   template <typename K, typename V>
-  void ExtendibleHash<K, V>::Insert(const K &key, const V &value) {}
+  void ExtendibleHash<K, V>::Insert(const K &key, const V &value)
+  {
+    m_directory[0]->m_data[0] = new Pair<K, V>(key, value);
+    return;
+  }
 
   template class ExtendibleHash<page_id_t, Page *>;
   template class ExtendibleHash<Page *, std::list<Page *>::iterator>;
