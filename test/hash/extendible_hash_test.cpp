@@ -6,18 +6,43 @@
 
 #include "hash/extendible_hash.h"
 #include "gtest/gtest.h"
+#include "common/logger.h"
 
 namespace cmudb
 {
   TEST(ExtendibleHashTest, simpleTest)
   {
     ExtendibleHash<int, std::string> *test = new ExtendibleHash<int, std::string>(2);
-    test->Insert(1, "a");
+    test->Insert(4, "v4");
+    test->Insert(0, "v0");
+    
     std::string result;
-    test->Find(1, result);
-    EXPECT_EQ("a", result);
+    test->Find(4, result);
+    EXPECT_EQ("v4", result);
+    test->Find(0, result);
+    EXPECT_EQ("v0", result);
+    
+    test->Insert(0, "v00");
+    test->Find(0, result);
+    EXPECT_EQ("v00", result);
+    
+    EXPECT_TRUE(test->Remove(0));
+    EXPECT_FALSE(test->Find(0, result));
+    
+    test->Insert(8, "v8");
+    test->Find(8, result);
+    EXPECT_EQ("v8", result);
+    
+    test->Insert(12, "v12");
+    
+    LOG_DEBUG("global depth   : %d\n",  test->GetGlobalDepth());
+    LOG_DEBUG("GetBucketId(0) : %lu\n", test->GetBucketId(0));
+    LOG_DEBUG("GetBucketId(1) : %lu\n", test->GetBucketId(1));
+    LOG_DEBUG("GetBucketId(2) : %lu\n", test->GetBucketId(2));
+    LOG_DEBUG("GetBucketId(3) : %lu\n", test->GetBucketId(3));   
+    LOG_DEBUG("GetBucketId(4) : %lu\n", test->GetBucketId(4));       
   }
-/*
+
   TEST(ExtendibleHashTest, SampleTest)
   {
     // set leaf size as 2
@@ -55,9 +80,9 @@ namespace cmudb
     EXPECT_EQ(1, test->Remove(1));
     EXPECT_EQ(0, test->Remove(20));
 
-    delete test;
+    //delete test;
   }
-
+/*
   TEST(ExtendibleHashTest, ConcurrentInsertTest)
   {
     const int num_runs = 50;
