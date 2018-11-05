@@ -63,6 +63,7 @@ namespace cmudb
       bool Find(const K &key, V &value) override;
       bool Remove(const K &key) override;
       void Insert(const K &key, const V &value) override;
+      void Print();
 
     private:
       void doubleDirectorySize();

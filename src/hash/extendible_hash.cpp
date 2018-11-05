@@ -127,7 +127,7 @@ namespace cmudb
     }
     return false;
   }
-  
+
   template <typename K, typename V>
   void ExtendibleHash<K, V>::doubleDirectorySize()
   {
@@ -142,7 +142,7 @@ namespace cmudb
     m_globalDepth++;
     return;
   }
-  
+
   /*
 * insert <key,value> entry in hash table
 * Split & Redistribute bucket when there is overflow and if necessary increase
@@ -179,57 +179,35 @@ namespace cmudb
       {
         doubleDirectorySize(); // Note: This would increase the global depth by 1
       }
-      
+
       // At this point the local depth is less than the global depth.
-      // Rehash the keys so that some keys might go to the mirror bucket.
-      
-      
-      /*
-      size_t oldBucketId;
-      size_t newBucketId;
-      if(bucketId == (bucketId & ((1<<localDepth)-1))) // eg 0xx & 011 => 0xx for localDepth=2
-      {
-        oldBucketId = bucketId;
-        newBucketId = bucketId | (1<<localDepth); // eg 0xx | 100 => 1xx for localDepth=2
-      }
-      else
-      {
-        newBucketId = bucketId;
-        oldBucketId = bucketId & ((1<<localDepth)-1); // eg 1xx & 011 => 0xx for localDepth=2
-      }
-      */
-      
-      size_t oldBucketId = bucketId  & ((1<<localDepth)-1); // eg aaa & 011 => 0aa
-      size_t newBucketId = bucketId | (1<<localDepth); // eg aaa | 100 => 1aa
-      
       // Create a new bucket with the updated localDepth
       Bucket<K, V>* newBucket = new Bucket<K, V>(m_numOfEntriesInABucket, (localDepth+1));
-      
-      // update the relevant bucket pointers in the directory to point to the new bucket
-      for(int i=0;i<(1<<m_globalDepth);i++)
-      {
-        if(m_directory[i] == bucket && (i != (i & ((1<<localDepth)-1))))
-        {
-          m_directory[i] = newBucket;
-        }
-      }
-      
+
       // increment the localDepth of the old bucket
-      bucket = m_directory[oldBucketId];
       bucket->m_localDepth = bucket->m_localDepth + 1;
-      
-      
+
       // Rehash all the keys in the current bucket so it might go into the new bucket
       size_t index=0;
       for(size_t i=0;i<m_numOfEntriesInABucket;i++)
       {
-        const auto bId = GetBucketId(bucket->m_data[i]->m_key);
-        if(bId == newBucketId)
+        int bId = (int) GetBucketId(bucket->m_data[i]->m_key);
+        if((bId & (1<<localDepth)) == (1<<localDepth)) // bbb 1aa and 000 100 => 000 100
         {
           newBucket->m_data[index++] = bucket->m_data[i];
           bucket->m_data[i] = NULL;
         }
       }
+
+      // update the relevant bucket pointers in the directory to point to the new bucket
+      for(int i=0;i<(1<<m_globalDepth);i++)
+      {
+        if((m_directory[i] == bucket) && ((i & (1<<localDepth)) == (1<<localDepth)))
+        {
+          m_directory[i] = newBucket;
+        }
+      }
+      // try inserting the new key now
       Insert(key, value);
       return;
     }
@@ -238,8 +216,29 @@ namespace cmudb
     return;
   }
 
+  template <typename K, typename V>
+  void ExtendibleHash<K, V>::Print()
+  {
+    for(int i=0;i<(1<<m_globalDepth);i++)
+    {
+      for(int j=0;j<(int)m_numOfEntriesInABucket;j++)
+      {
+        if(m_directory[i]->m_data[j])
+        {
+          printf("%d\t", (int)m_directory[i]->m_data[j]->m_key);
+        }
+        else
+        {
+          printf("E\t");
+        }
+      }
+      printf("\n");
+    }
+    return;
+  }
+
   template class ExtendibleHash<page_id_t, Page *>;
-  template class ExtendibleHash<Page *, std::list<Page *>::iterator>;
+  //template class ExtendibleHash<Page *, std::list<Page *>::iterator>;
   // test purpose
   template class ExtendibleHash<int, std::string>;
   template class ExtendibleHash<int, std::list<int>::iterator>;

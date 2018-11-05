@@ -7,6 +7,8 @@
 #include "hash/extendible_hash.h"
 #include "gtest/gtest.h"
 #include "common/logger.h"
+#include <unordered_map>
+#include <random>
 
 namespace cmudb
 {
@@ -15,32 +17,64 @@ namespace cmudb
     ExtendibleHash<int, std::string> *test = new ExtendibleHash<int, std::string>(2);
     test->Insert(4, "v4");
     test->Insert(0, "v0");
-    
+
     std::string result;
     test->Find(4, result);
     EXPECT_EQ("v4", result);
     test->Find(0, result);
     EXPECT_EQ("v0", result);
-    
+
     test->Insert(0, "v00");
     test->Find(0, result);
     EXPECT_EQ("v00", result);
-    
+
     EXPECT_TRUE(test->Remove(0));
     EXPECT_FALSE(test->Find(0, result));
-    
+
     test->Insert(8, "v8");
     test->Find(8, result);
     EXPECT_EQ("v8", result);
-    
+
     test->Insert(12, "v12");
-    
+
     LOG_DEBUG("global depth   : %d\n",  test->GetGlobalDepth());
-    LOG_DEBUG("GetBucketId(0) : %lu\n", test->GetBucketId(0));
-    LOG_DEBUG("GetBucketId(1) : %lu\n", test->GetBucketId(1));
-    LOG_DEBUG("GetBucketId(2) : %lu\n", test->GetBucketId(2));
-    LOG_DEBUG("GetBucketId(3) : %lu\n", test->GetBucketId(3));   
-    LOG_DEBUG("GetBucketId(4) : %lu\n", test->GetBucketId(4));       
+  }
+
+  TEST(ExtendibleHashTest, compareWithMap)
+  {
+    ExtendibleHash<int, std::string> *test = new ExtendibleHash<int, std::string>(2);
+    std::unordered_map<int, std::string> map;
+
+    std::default_random_engine e1(0);
+    std::uniform_int_distribution<int> uniform_dist(1, 10000);
+    for(int i=0;i<1000000;i++)
+    {
+      if(i%100000 == 0)
+      {
+        printf(".");
+        fflush(stdout);
+      }
+      {
+        int randomKey = uniform_dist(e1);
+        test->Insert(randomKey, "v");
+        map[randomKey] = "v";
+      }
+      {
+        int randomKey = uniform_dist(e1);
+        test->Remove(randomKey);
+        map.erase(randomKey);
+      }
+
+      {
+        int randomKey = uniform_dist(e1);
+        std::string extHash;
+        bool isFoundInExt = test->Find(randomKey, extHash);
+        std::unordered_map<int, std::string>::const_iterator mapOut =  map.find(randomKey);
+        bool isFoundInMap = (mapOut != map.end());
+        EXPECT_EQ(isFoundInMap, isFoundInExt);
+      }
+    }
+    printf("\n");
   }
 
   TEST(ExtendibleHashTest, SampleTest)
